@@ -321,6 +321,8 @@ function wireLoading(p) {
 }
 
 function resetSegment() {
+  playBothRunning = false;   // シーク待ち中の playBoth を取り消す
+  restarting = false;        // 進行中のループ再開も取り消す
   state.segLen = null;
   state.loop = false;
   state.playingBoth = false;
@@ -399,6 +401,7 @@ function wireAB(p) {
   p.bset.addEventListener("click", () => {
     const len = p.video.currentTime - p.a;
     if (len <= 0) return;   // A地点より前はBにできない（設計書§4）
+    if (len < 0.1) return;  // 0.1秒未満の極小区間はループが即時再発火し続けるため不可
     state.segLen = len;     // もう片方のBは「そのA＋同区間長」として自動決定
     updateControls();
   });
