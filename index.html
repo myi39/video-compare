@@ -398,35 +398,46 @@ function wireAB(p) {
   });
 }
 
-// シーク完了を待つ（同じ位置へのシークで seeked が発火しない環境向けに300msの保険つき）
+// シーク完了を待つ（同じ位置へのシークで seeked が発火しない環境向けの保険つき。
+// 旧端末ではシークに時間がかかるため500ms）
 function seekAndWait(p, t) {
   return new Promise((resolve) => {
     const v = p.video;
     let done = false;
+    let timer;
     const finish = () => {
       if (done) return;
       done = true;
+      clearTimeout(timer);
       v.removeEventListener("seeked", finish);
       resolve();
     };
     v.addEventListener("seeked", finish);
     v.currentTime = t;
-    setTimeout(finish, 300);
+    timer = setTimeout(finish, 500);
   });
 }
 
+// 同時再生の二重起動と「停止後にシーク完了で再生が復活する」競合を防ぐ
+let playBothRunning = false;
+
 async function playBoth() {
+  if (playBothRunning) return;
+  playBothRunning = true;
   panels.forEach((q) => q.video.pause());
   await Promise.all(panels.map((q) => seekAndWait(q, q.a)));
+  if (!playBothRunning) return;   // シーク待ち中に pauseBoth で取り消された
   panels.forEach((q) => {
     q.video.playbackRate = state.speed;
     safePlay(q.video);
   });
   state.playingBoth = true;
+  playBothRunning = false;
   updateControls();
 }
 
 function pauseBoth() {
+  playBothRunning = false;   // シーク待ち中の playBoth を取り消す
   panels.forEach((q) => q.video.pause());
   state.playingBoth = false;
   updateControls();
