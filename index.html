@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>video-compare — タイムアタック動画比較</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0d0e12;
+    --panel: #16171d;
+    --panel2: #1c1d24;
+    --border: #26272e;
+    --text: #e6e7eb;
+    --text2: #8a8f98;
+    --accent: #5e6ad2;
+    --green: #4cb782;
+    --red: #eb5757;
+  }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 78px;
+    font-size: 15px;
+  }
+  button { font-family: inherit; }
+  header {
+    padding: 10px 16px 4px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  header h1 { font-size: 0.9rem; margin: 0; font-weight: 600; }
+  header .note { font-size: 0.65rem; color: var(--text2); }
+
+  .panel {
+    margin: 8px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .video-area {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: 28vh;   /* dvh非対応ブラウザ用フォールバック */
+    max-height: 28dvh;  /* 縦長動画でも2パネルが画面に収まる高さ制限（設計書§3） */
+    background: #101116;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .video-area video {
+    width: 100%; height: 100%;
+    object-fit: contain;   /* 縦長動画は左右余白（ピラーボックス） */
+    background: #000;
+  }
+  .badge {
+    position: absolute; top: 6px; left: 8px;
+    font-size: 0.62rem; color: var(--text2);
+    background: rgba(13,14,18,0.7); border-radius: 5px; padding: 2px 7px;
+    z-index: 1;
+  }
+  .pick-btn {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 20px; font-size: 0.85rem; font-weight: 500;
+  }
+  .err {
+    position: absolute; margin: 0;
+    color: var(--red); font-size: 0.75rem;
+  }
+
+  .ctrlrow {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 10px;
+  }
+  .playone {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 7px; width: 40px; height: 32px; font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .seekwrap { position: relative; flex: 1; display: flex; align-items: center; }
+  .seek {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; background: transparent; margin: 0; height: 20px;
+  }
+  .seek::-webkit-slider-runnable-track {
+    height: 4px; background: #26272e; border-radius: 2px;
+  }
+  .seek::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    margin-top: -6px; box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+  .seek::-moz-range-track { height: 4px; background: #26272e; border-radius: 2px; }
+  .seek::-moz-range-thumb {
+    width: 16px; height: 16px; border: none; border-radius: 50%; background: #fff;
+  }
+  .seek:disabled::-webkit-slider-thumb { background: #4a5060; }
+  .amark, .bmark {
+    position: absolute; top: -7px; font-size: 0.55rem; font-weight: 700;
+    transform: translateX(-50%); pointer-events: none;
+  }
+  .amark { color: var(--green); }
+  .bmark { color: var(--red); }
+  .time {
+    font-variant-numeric: tabular-nums; font-size: 0.72rem; color: var(--text2);
+    flex-shrink: 0;
+  }
+  .time b { color: var(--text); font-weight: 500; }
+  .tune-toggle {
+    background: transparent; border: none; color: var(--text2);
+    font-size: 0.85rem; width: 30px; height: 32px; flex-shrink: 0;
+  }
+  .tune-toggle.open { color: var(--accent); }
+
+  .tune {
+    border-top: 1px solid var(--border);
+    background: var(--panel2);
+    padding: 10px 10px 11px;
+  }
+  .steprow { display: flex; gap: 5px; }
+  .steprow button {
+    flex: 1; background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 9px 0; font-size: 0.7rem; font-variant-numeric: tabular-nums;
+  }
+  .abrow { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+  .abrow button {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 14px; font-size: 0.72rem; color: var(--text);
+  }
+  .abrow .aset { color: var(--green); }
+  .abrow .bset { color: var(--red); }
+  .abrow .abval { font-size: 0.68rem; color: var(--text2); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+  .hint {
+    margin: 2px 16px; font-size: 0.68rem; color: var(--text2); line-height: 1.6;
+  }
+
+  .globalbar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(13,14,18,0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+    display: flex; gap: 8px; align-items: center;
+  }
+  .playboth {
+    flex: 1.5;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 9px;
+    padding: 11px 0; font-size: 0.9rem; font-weight: 600;
+  }
+  .playboth:disabled { opacity: 0.45; }
+  .speedbtn, .loopbtn {
+    flex: 1; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: 11px 0; font-size: 0.8rem;
+  }
+  .loopbtn:disabled { opacity: 0.45; }
+  .loopbtn.on { color: var(--green); border-color: var(--green); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>video-compare</h1>
+    <span class="note">動画はこの端末の外に出ません</span>
+  </header>
+
+  <main id="panels"></main>
+
+  <p class="hint" id="hint">① 動画を選ぶ → ② 同じ場面で「A に設定」 → ③ 同時再生</p>
+
+  <div class="globalbar">
+    <button class="playboth" id="playBothBtn" disabled>▶ 同時再生</button>
+    <button class="speedbtn" id="speedBtn">1.0×</button>
+    <button class="loopbtn" id="loopBtn" disabled>ループ</button>
+  </div>
+
+  <template id="panelTpl">
+    <section class="panel">
+      <div class="video-area">
+        <span class="badge"></span>
+        <video playsinline muted preload="metadata" hidden></video>
+        <button class="pick-btn"></button>
+        <input type="file" accept="video/*" hidden>
+        <p class="err" hidden>この動画形式は再生できません</p>
+      </div>
+      <div class="ctrlrow">
+        <button class="playone" disabled>▶</button>
+        <div class="seekwrap">
+          <span class="amark" hidden>A</span>
+          <span class="bmark" hidden>B</span>
+          <input type="range" class="seek" min="0" max="0" step="0.01" value="0" disabled>
+        </div>
+        <span class="time"><b>0.00</b>/0.00</span>
+        <button class="tune-toggle">⚙</button>
+      </div>
+      <div class="tune" hidden>
+        <div class="steprow">
+          <button data-d="-1">−1</button><button data-d="-0.1">−0.1</button><button data-d="-0.01">−0.01</button>
+          <button data-d="0.01">+0.01</button><button data-d="0.1">+0.1</button><button data-d="1">+1</button>
+        </div>
+        <div class="abrow">
+          <button class="aset" disabled>A に設定</button>
+          <button class="bset" disabled>B に設定</button>
+          <button class="repick">選び直す</button>
+          <span class="abval"></span>
+        </div>
+      </div>
+    </section>
+  </template>
+
+<script>
+"use strict";
+
+// ===== 状態 =====
+const SPEEDS = [1, 0.25, 0.5, 0.75];
+const state = {
+  segLen: null,        // AB区間長（秒）。null = B未設定
+  speed: 1,
+  loop: false,
+  playingBoth: false,
+};
+const panels = [];
+
+const playBothBtn = document.getElementById("playBothBtn");
+const speedBtn = document.getElementById("speedBtn");
+const loopBtn = document.getElementById("loopBtn");
+const hintEl = document.getElementById("hint");
+
+// ===== ユーティリティ =====
+const fmt = (t) => Math.max(0, t).toFixed(2);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// ===== パネル生成 =====
+function createPanel(i) {
+  const node = document.getElementById("panelTpl").content.cloneNode(true);
+  const root = node.querySelector(".panel");
+  const p = {
+    i,
+    root,
+    video: root.querySelector("video"),
+    badge: root.querySelector(".badge"),
+    pickBtn: root.querySelector(".pick-btn"),
+    fileInput: root.querySelector("input[type=file]"),
+    err: root.querySelector(".err"),
+    playone: root.querySelector(".playone"),
+    seek: root.querySelector(".seek"),
+    amark: root.querySelector(".amark"),
+    bmark: root.querySelector(".bmark"),
+    timeEl: root.querySelector(".time"),
+    tuneToggle: root.querySelector(".tune-toggle"),
+    tune: root.querySelector(".tune"),
+    abval: root.querySelector(".abval"),
+    aset: root.querySelector(".aset"),
+    bset: root.querySelector(".bset"),
+    repick: root.querySelector(".repick"),
+    url: null,        // objectURL
+    a: 0,             // A地点（この動画の時刻・秒）
+    ready: false,     // 再生可能か
+    dragging: false,  // シークバーをドラッグ中か
+  };
+  p.badge.textContent = `動画 ${i + 1}`;
+  p.pickBtn.textContent = `動画 ${i + 1} を選ぶ`;
+
+  wireTuneToggle(p);
+  // ここに後続タスクの wire 呼び出しを追加していく
+
+  document.getElementById("panels").appendChild(node);
+  return p;
+}
+
+function wireTuneToggle(p) {
+  p.tuneToggle.addEventListener("click", () => {
+    const open = p.tune.hidden;
+    p.tune.hidden = !open;
+    p.tuneToggle.classList.toggle("open", open);
+  });
+}
+
+// ===== 起動 =====
+panels.push(createPanel(0), createPanel(1));
+</script>
+</body>
+</html>
