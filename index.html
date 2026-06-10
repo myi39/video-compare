@@ -484,6 +484,14 @@ loopBtn.addEventListener("click", () => {
   updateControls();
 });
 
+// ===== 速度 =====
+speedBtn.addEventListener("click", () => {
+  const idx = SPEEDS.indexOf(state.speed);
+  state.speed = SPEEDS[(idx + 1) % SPEEDS.length];
+  panels.forEach((q) => { q.video.playbackRate = state.speed; });
+  updateControls();
+});
+
 // ===== UI更新ループ =====
 function updatePanelUI(p) {
   if (!p.ready) return;
