@@ -266,6 +266,7 @@ function createPanel(i) {
   p.pickBtn.textContent = `動画 ${i + 1} を選ぶ`;
 
   wireTuneToggle(p);
+  wireLoading(p);
   // ここに後続タスクの wire 呼び出しを追加していく
 
   document.getElementById("panels").appendChild(node);
@@ -280,8 +281,72 @@ function wireTuneToggle(p) {
   });
 }
 
+// ===== 動画読み込み =====
+function wireLoading(p) {
+  p.pickBtn.addEventListener("click", () => p.fileInput.click());
+  p.repick.addEventListener("click", () => p.fileInput.click());
+
+  p.fileInput.addEventListener("change", () => {
+    const file = p.fileInput.files[0];
+    if (!file) return;
+    if (p.url) URL.revokeObjectURL(p.url);
+    p.url = URL.createObjectURL(file);
+    p.ready = false;
+    p.err.hidden = true;
+    p.video.src = p.url;
+    p.video.hidden = false;
+    p.pickBtn.hidden = true;
+  });
+
+  p.video.addEventListener("loadedmetadata", () => {
+    p.ready = true;
+    p.a = 0;
+    resetSegment();   // 動画が替わったら区間・同時再生状態は無効化
+    p.seek.max = p.video.duration.toFixed(2);
+    p.seek.value = 0;
+    updateControls();
+  });
+
+  p.video.addEventListener("error", () => {
+    p.ready = false;
+    p.err.hidden = false;
+    p.video.hidden = true;
+    p.pickBtn.hidden = false;
+    updateControls();
+  });
+}
+
+function resetSegment() {
+  state.segLen = null;
+  state.loop = false;
+  state.playingBoth = false;
+}
+
+function updateControls() {
+  const bothReady = panels.every((q) => q.ready);
+  for (const q of panels) {
+    q.playone.disabled = !q.ready;
+    q.seek.disabled = !q.ready;
+    q.aset.disabled = !q.ready;
+    q.bset.disabled = !q.ready;
+    for (const btn of q.root.querySelectorAll(".steprow button")) btn.disabled = !q.ready;
+    q.abval.textContent = q.ready
+      ? `A ${fmt(q.a)}` + (state.segLen != null ? ` ・ B ${fmt(q.a + state.segLen)}` : "")
+      : "";
+  }
+  playBothBtn.disabled = !bothReady;
+  playBothBtn.textContent = state.playingBoth ? "⏸ 同時停止" : "▶ 同時再生";
+  loopBtn.disabled = state.segLen == null;
+  loopBtn.classList.toggle("on", state.loop);
+  speedBtn.textContent = (state.speed === 1 ? "1.0" : String(state.speed)) + "×";
+  hintEl.textContent = bothReady
+    ? "① 同じ場面で「A に設定」(⚙内) → ② 同時再生。区間を繰り返すなら「B に設定」→ループ"
+    : "動画を2本選ぶと同時再生できます";
+}
+
 // ===== 起動 =====
 panels.push(createPanel(0), createPanel(1));
+updateControls();
 </script>
 </body>
 </html>
