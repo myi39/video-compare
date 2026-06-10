@@ -269,6 +269,7 @@ function createPanel(i) {
   wireLoading(p);
   wireSeek(p);
   wirePlayOne(p);
+  wireAB(p);
   // ここに後続タスクの wire 呼び出しを追加していく
 
   document.getElementById("panels").appendChild(node);
@@ -388,6 +389,54 @@ function wirePlayOne(p) {
     }
   });
 }
+
+// ===== A/B・同時再生 =====
+function wireAB(p) {
+  p.aset.addEventListener("click", () => {
+    p.a = p.video.currentTime;
+    updateControls();
+  });
+}
+
+// シーク完了を待つ（同じ位置へのシークで seeked が発火しない環境向けに300msの保険つき）
+function seekAndWait(p, t) {
+  return new Promise((resolve) => {
+    const v = p.video;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      v.removeEventListener("seeked", finish);
+      resolve();
+    };
+    v.addEventListener("seeked", finish);
+    v.currentTime = t;
+    setTimeout(finish, 300);
+  });
+}
+
+async function playBoth() {
+  panels.forEach((q) => q.video.pause());
+  await Promise.all(panels.map((q) => seekAndWait(q, q.a)));
+  panels.forEach((q) => {
+    q.video.playbackRate = state.speed;
+    safePlay(q.video);
+  });
+  state.playingBoth = true;
+  updateControls();
+}
+
+function pauseBoth() {
+  panels.forEach((q) => q.video.pause());
+  state.playingBoth = false;
+  updateControls();
+}
+
+playBothBtn.addEventListener("click", () => {
+  if (!panels.every((q) => q.ready)) return;
+  if (state.playingBoth) pauseBoth();
+  else playBoth();
+});
 
 // ===== UI更新ループ =====
 function updatePanelUI(p) {
