@@ -267,6 +267,7 @@ function createPanel(i) {
 
   wireTuneToggle(p);
   wireLoading(p);
+  wireSeek(p);
   // ここに後続タスクの wire 呼び出しを追加していく
 
   document.getElementById("panels").appendChild(node);
@@ -345,9 +346,52 @@ function updateControls() {
     : "動画を2本選ぶと同時再生できます";
 }
 
+// ===== シーク操作 =====
+function wireSeek(p) {
+  p.seek.addEventListener("pointerdown", () => { p.dragging = true; });
+  p.seek.addEventListener("pointerup", () => { p.dragging = false; });
+  p.seek.addEventListener("input", () => {
+    if (!p.ready) return;
+    p.video.currentTime = parseFloat(p.seek.value);
+  });
+  for (const btn of p.root.querySelectorAll(".steprow button")) {
+    btn.addEventListener("click", () => stepSeek(p, parseFloat(btn.dataset.d)));
+  }
+}
+
+function stepSeek(p, d) {
+  if (!p.ready) return;
+  p.video.pause();
+  p.video.currentTime = clamp(p.video.currentTime + d, 0, p.video.duration);
+}
+
+// ===== UI更新ループ =====
+function updatePanelUI(p) {
+  if (!p.ready) return;
+  const v = p.video;
+  if (!p.dragging) p.seek.value = v.currentTime.toFixed(2);
+  p.timeEl.innerHTML = `<b>${fmt(v.currentTime)}</b>/${fmt(v.duration)}`;
+  const pos = (t) => `${clamp(t / v.duration, 0, 1) * 100}%`;
+  p.amark.hidden = false;
+  p.amark.style.left = pos(p.a);
+  if (state.segLen != null) {
+    p.bmark.hidden = false;
+    p.bmark.style.left = pos(p.a + state.segLen);
+  } else {
+    p.bmark.hidden = true;
+  }
+  p.playone.textContent = v.paused ? "▶" : "⏸";
+}
+
+function tick() {
+  panels.forEach(updatePanelUI);
+  requestAnimationFrame(tick);
+}
+
 // ===== 起動 =====
 panels.push(createPanel(0), createPanel(1));
 updateControls();
+requestAnimationFrame(tick);
 </script>
 </body>
 </html>
