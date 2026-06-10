@@ -396,6 +396,12 @@ function wireAB(p) {
     p.a = p.video.currentTime;
     updateControls();
   });
+  p.bset.addEventListener("click", () => {
+    const len = p.video.currentTime - p.a;
+    if (len <= 0) return;   // A地点より前はBにできない（設計書§4）
+    state.segLen = len;     // もう片方のBは「そのA＋同区間長」として自動決定
+    updateControls();
+  });
 }
 
 // シーク完了を待つ（同じ位置へのシークで seeked が発火しない環境向けの保険つき。
@@ -449,6 +455,32 @@ playBothBtn.addEventListener("click", () => {
   else playBoth();
 });
 
+// ===== ループ監視 =====
+let restarting = false;
+
+async function restartLoop() {
+  if (restarting) return;
+  restarting = true;
+  await playBoth();
+  restarting = false;
+}
+
+function checkSegment() {
+  if (!state.playingBoth || state.segLen == null || restarting) return;
+  const over = panels.some(
+    (q) => q.video.currentTime - q.a >= state.segLen || q.video.ended
+  );
+  if (!over) return;
+  if (state.loop) restartLoop();
+  else pauseBoth();
+}
+
+loopBtn.addEventListener("click", () => {
+  if (state.segLen == null) return;
+  state.loop = !state.loop;
+  updateControls();
+});
+
 // ===== UI更新ループ =====
 function updatePanelUI(p) {
   if (!p.ready) return;
@@ -468,6 +500,7 @@ function updatePanelUI(p) {
 }
 
 function tick() {
+  checkSegment();
   panels.forEach(updatePanelUI);
   requestAnimationFrame(tick);
 }
