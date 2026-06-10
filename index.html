@@ -350,6 +350,7 @@ function updateControls() {
 function wireSeek(p) {
   p.seek.addEventListener("pointerdown", () => { p.dragging = true; });
   p.seek.addEventListener("pointerup", () => { p.dragging = false; });
+  p.seek.addEventListener("pointercancel", () => { p.dragging = false; });
   p.seek.addEventListener("input", () => {
     if (!p.ready) return;
     p.video.currentTime = parseFloat(p.seek.value);
