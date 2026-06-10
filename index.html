@@ -368,12 +368,17 @@ function stepSeek(p, d) {
 }
 
 // ===== 単独再生 =====
+// play()はpause()との競合でAbortErrorを投げることがある（素早い連打等）ため、それだけ握りつぶす
+function safePlay(v) {
+  v.play().catch((e) => { if (e.name !== "AbortError") throw e; });
+}
+
 function wirePlayOne(p) {
   p.playone.addEventListener("click", () => {
     if (!p.ready) return;
     if (p.video.paused) {
       p.video.playbackRate = state.speed;
-      p.video.play();
+      safePlay(p.video);
     } else {
       p.video.pause();
       if (state.playingBoth) {
