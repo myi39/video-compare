@@ -1,0 +1,10 @@
+# 開発用ドキュメント・モックアップ（ローカルのみ、公開しない）
+docs/
+mockups/
+
+# Claude Code ローカル設定
+.claude/
+
+# OS
+Thumbs.db
+.DS_Store
