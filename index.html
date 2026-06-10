@@ -22,7 +22,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding-bottom: 78px;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
     font-size: 15px;
   }
   button { font-family: inherit; }
@@ -96,6 +96,7 @@
     width: 16px; height: 16px; border: none; border-radius: 50%; background: #fff;
   }
   .seek:disabled::-webkit-slider-thumb { background: #4a5060; }
+  .seek:disabled::-moz-range-thumb { background: #4a5060; }
   .amark, .bmark {
     position: absolute; top: -7px; font-size: 0.55rem; font-weight: 700;
     transform: translateX(-50%); pointer-events: none;
@@ -172,9 +173,9 @@
   <p class="hint" id="hint">① 動画を選ぶ → ② 同じ場面で「A に設定」 → ③ 同時再生</p>
 
   <div class="globalbar">
-    <button class="playboth" id="playBothBtn" disabled>▶ 同時再生</button>
-    <button class="speedbtn" id="speedBtn">1.0×</button>
-    <button class="loopbtn" id="loopBtn" disabled>ループ</button>
+    <button type="button" class="playboth" id="playBothBtn" disabled>▶ 同時再生</button>
+    <button type="button" class="speedbtn" id="speedBtn">1.0×</button>
+    <button type="button" class="loopbtn" id="loopBtn" disabled>ループ</button>
   </div>
 
   <template id="panelTpl">
@@ -182,29 +183,29 @@
       <div class="video-area">
         <span class="badge"></span>
         <video playsinline muted preload="metadata" hidden></video>
-        <button class="pick-btn"></button>
+        <button type="button" class="pick-btn"></button>
         <input type="file" accept="video/*" hidden>
         <p class="err" hidden>この動画形式は再生できません</p>
       </div>
       <div class="ctrlrow">
-        <button class="playone" disabled>▶</button>
+        <button type="button" class="playone" disabled>▶</button>
         <div class="seekwrap">
           <span class="amark" hidden>A</span>
           <span class="bmark" hidden>B</span>
           <input type="range" class="seek" min="0" max="0" step="0.01" value="0" disabled>
         </div>
         <span class="time"><b>0.00</b>/0.00</span>
-        <button class="tune-toggle">⚙</button>
+        <button type="button" class="tune-toggle">⚙</button>
       </div>
       <div class="tune" hidden>
         <div class="steprow">
-          <button data-d="-1">−1</button><button data-d="-0.1">−0.1</button><button data-d="-0.01">−0.01</button>
-          <button data-d="0.01">+0.01</button><button data-d="0.1">+0.1</button><button data-d="1">+1</button>
+          <button type="button" data-d="-1" disabled>−1</button><button type="button" data-d="-0.1" disabled>−0.1</button><button type="button" data-d="-0.01" disabled>−0.01</button>
+          <button type="button" data-d="0.01" disabled>+0.01</button><button type="button" data-d="0.1" disabled>+0.1</button><button type="button" data-d="1" disabled>+1</button>
         </div>
         <div class="abrow">
-          <button class="aset" disabled>A に設定</button>
-          <button class="bset" disabled>B に設定</button>
-          <button class="repick">選び直す</button>
+          <button type="button" class="aset" disabled>A に設定</button>
+          <button type="button" class="bset" disabled>B に設定</button>
+          <button type="button" class="repick">選び直す</button>
           <span class="abval"></span>
         </div>
       </div>
