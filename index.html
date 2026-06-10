@@ -323,6 +323,7 @@ function wireLoading(p) {
 function resetSegment() {
   playBothRunning = false;   // シーク待ち中の playBoth を取り消す
   restarting = false;        // 進行中のループ再開も取り消す
+  panels.forEach((q) => q.video.pause());   // 差し替え時にもう片方が再生し続けるのを防ぐ
   state.segLen = null;
   state.loop = false;
   state.playingBoth = false;
