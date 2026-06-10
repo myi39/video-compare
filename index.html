@@ -268,6 +268,7 @@ function createPanel(i) {
   wireTuneToggle(p);
   wireLoading(p);
   wireSeek(p);
+  wirePlayOne(p);
   // ここに後続タスクの wire 呼び出しを追加していく
 
   document.getElementById("panels").appendChild(node);
@@ -364,6 +365,23 @@ function stepSeek(p, d) {
   if (!p.ready) return;
   p.video.pause();
   p.video.currentTime = clamp(p.video.currentTime + d, 0, p.video.duration);
+}
+
+// ===== 単独再生 =====
+function wirePlayOne(p) {
+  p.playone.addEventListener("click", () => {
+    if (!p.ready) return;
+    if (p.video.paused) {
+      p.video.playbackRate = state.speed;
+      p.video.play();
+    } else {
+      p.video.pause();
+      if (state.playingBoth) {
+        state.playingBoth = false;
+        updateControls();
+      }
+    }
+  });
 }
 
 // ===== UI更新ループ =====
