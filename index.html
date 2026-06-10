@@ -283,8 +283,8 @@ function wireTuneToggle(p) {
 
 // ===== 動画読み込み =====
 function wireLoading(p) {
-  p.pickBtn.addEventListener("click", () => p.fileInput.click());
-  p.repick.addEventListener("click", () => p.fileInput.click());
+  p.pickBtn.addEventListener("click", () => { p.fileInput.value = ""; p.fileInput.click(); });
+  p.repick.addEventListener("click", () => { p.fileInput.value = ""; p.fileInput.click(); });
 
   p.fileInput.addEventListener("change", () => {
     const file = p.fileInput.files[0];
@@ -296,6 +296,7 @@ function wireLoading(p) {
     p.video.src = p.url;
     p.video.hidden = false;
     p.pickBtn.hidden = true;
+    updateControls();
   });
 
   p.video.addEventListener("loadedmetadata", () => {
