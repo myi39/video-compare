@@ -422,6 +422,7 @@ function createPanel(i) {
   };
   p.badge.textContent = `${i + 1}`;
   p.pickBtn.textContent = "動画を選択";
+  p.video.muted = i !== 0;   // 排他方式: 基本は動画1のみ音あり
   p.tuneToggle.innerHTML = icon("settings", 16);
   p.playone.innerHTML = icon("play", 16);
 
@@ -547,10 +548,15 @@ function stepSeek(p, d) {
 }
 
 // ===== 音声 =====
-// 基本は両方音あり。スピーカーボタンで動画ごとにミュート切替（全体ミュートはなし）
+// 排他方式: 音が出るのは常に最大1本（iOSは音あり動画の同時再生を1本に制限するため）。
+// ミュート側をタップ→その動画の音ON＋もう片方をミュート。音あり側をタップ→両方ミュート
 function wireMute(p) {
   p.muteBtn.addEventListener("click", () => {
-    p.video.muted = !p.video.muted;
+    if (p.video.muted) {
+      panels.forEach((q) => { q.video.muted = q !== p; });
+    } else {
+      p.video.muted = true;
+    }
     syncMuteButtons();
   });
 }
