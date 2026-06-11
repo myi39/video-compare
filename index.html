@@ -502,7 +502,9 @@ function pauseBoth() {
 // 一時停止位置からの再開（シークせず、いまの位置のまま両方を再生）
 function resumeBoth() {
   if (playBothRunning) return;   // 「Aから」のシーク待ち中は無視
+  if (panels.every((q) => q.video.ended)) return;   // 両方終了時は「Aから」で仕切り直す
   panels.forEach((q) => {
+    if (q.video.ended) return;   // 終わった方は最後の位置のまま（play()の自動巻き戻しをさせない）
     q.video.playbackRate = state.speed;
     safePlay(q.video);
   });
