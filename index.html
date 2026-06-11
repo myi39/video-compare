@@ -258,7 +258,7 @@
 <body>
   <header>
     <h1>video-compare</h1>
-    <button type="button" class="helpbtn" id="helpBtn" aria-label="使い方を表示"></button>
+    <button type="button" class="helpbtn" id="helpBtn" aria-label="ヘルプを表示"></button>
   </header>
 
   <div class="modal" id="helpModal" hidden>
@@ -769,7 +769,7 @@ gtuneToggle.innerHTML = icon("settings", 16);
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
 const helpClose = document.getElementById("helpClose");
-helpBtn.innerHTML = "<span>使い方</span>" + icon("helpCircle", 18);
+helpBtn.innerHTML = "<span>ヘルプ</span>" + icon("helpCircle", 18);
 helpClose.innerHTML = icon("x", 18);
 helpBtn.addEventListener("click", () => { helpModal.hidden = false; });
 helpClose.addEventListener("click", () => { helpModal.hidden = true; });
