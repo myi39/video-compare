@@ -560,9 +560,16 @@ function resumeBoth() {
   updateControls();
 }
 
+// 停止したままAへ頭出し（再生はしない）
+async function seekBothToA() {
+  pauseBoth();   // 進行中の同時再生・シーク待ちも取り消す
+  await Promise.all(panels.map((q) => seekAndWait(q, q.a)));
+}
+
 restartBtn.addEventListener("click", () => {
   if (!panels.every((q) => q.ready)) return;
-  playBoth();
+  if (state.playingBoth) playBoth();   // 再生中なら頭出しして再生継続
+  else seekBothToA();                  // 停止中なら頭出しのみ
 });
 
 playBothBtn.addEventListener("click", () => {
