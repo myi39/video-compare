@@ -59,12 +59,13 @@
   }
   .modal-steps { margin: 0; padding-left: 1.3em; font-size: 0.8rem; line-height: 1.75; }
   .modal-steps li { margin-bottom: 5px; }
-  .modal-privacy {
-    margin-top: 14px; padding: 10px 12px;
+  .modal-sub { font-size: 0.76rem; margin: 12px 0 6px; color: var(--text2); font-weight: 600; }
+  .info-item {
+    margin-top: 8px; padding: 10px 12px;
     background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
   }
-  .modal-privacy h3 { font-size: 0.78rem; margin: 0 0 4px; color: var(--green); }
-  .modal-privacy p { font-size: 0.74rem; margin: 0; color: var(--text2); line-height: 1.7; }
+  .info-item h4 { font-size: 0.76rem; margin: 0 0 4px; }
+  .info-item p { font-size: 0.74rem; margin: 0; color: var(--text2); line-height: 1.7; }
 
   .panel {
     margin: 8px 10px;
@@ -265,19 +266,25 @@
   <div class="modal" id="helpModal" hidden>
     <div class="modal-card">
       <div class="modal-head">
-        <h2>使い方</h2>
+        <h2>ヘルプ</h2>
         <button type="button" class="modal-close" id="helpClose" aria-label="閉じる"></button>
       </div>
+      <h3 class="modal-sub">使い方</h3>
       <ol class="modal-steps">
         <li>「動画を選択」で比較したい動画を <b>2本</b> 選ぶ（1回の選択で2本まとめてもOK）</li>
         <li>各動画の歯車を開き、±ボタンで「同じ場面」（スタートの瞬間など）まで動かして「<b>A に設定</b>」</li>
         <li>「<b>Aから</b>」で2本をAに頭出し → 再生ボタンで同時再生。下のタイムはAからの経過時間</li>
         <li>同じ区間を繰り返すなら、区間の終わりで「<b>B に設定</b>」→ 右下の設定で「ABループ」をON</li>
-        <li>スロー再生や、2本まとめての位置調整も右下の設定から</li>
+        <li>スロー再生・2本まとめての位置調整は右下の設定から。音を聞く動画は各動画のスピーカーボタンで切替</li>
       </ol>
-      <div class="modal-privacy">
-        <h3>動画はどこにも送信されません</h3>
-        <p>選んだ動画は、いま使っているスマホ・パソコンの中だけで再生されます。インターネットにアップロードされたり、誰かに見られたりすることはありません。このページを閉じれば、ページと動画のつながりも消えます。</p>
+      <h3 class="modal-sub">その他</h3>
+      <div class="info-item">
+        <h4>動画はどこにも送信されません</h4>
+        <p>選んだ動画は、いま使っているスマホ・パソコンの中だけで再生されます。インターネットにアップロードされたり、誰かに見られたりすることはありません。</p>
+      </div>
+      <div class="info-item">
+        <h4>音が出るのは1本だけ</h4>
+        <p>スマホの仕組み上、2本の動画から同時に音を出すことはできません。音が出るのは常にどちらか1本で、スピーカーボタンで聞きたい方を選べます。</p>
       </div>
     </div>
   </div>
