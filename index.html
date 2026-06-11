@@ -43,8 +43,8 @@
   .video-area {
     position: relative;
     aspect-ratio: 16 / 9;
-    max-height: 28vh;   /* dvh非対応ブラウザ用フォールバック */
-    max-height: 28dvh;  /* 縦長動画でも2パネルが画面に収まる高さ制限（設計書§3） */
+    max-height: 40vh;   /* dvh非対応ブラウザ用フォールバック */
+    max-height: 40dvh;  /* 横持ち等の極端な画面比への保険。縦持ちでは16:9全幅が常に優先される */
     background: #101116;
     display: flex; align-items: center; justify-content: center;
   }
