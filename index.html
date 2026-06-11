@@ -345,7 +345,7 @@ function createPanel(i) {
     dragging: false,  // シークバーをドラッグ中か
   };
   p.badge.textContent = `${i + 1}`;
-  p.pickBtn.textContent = i === 0 ? "動画 1 を選ぶ（2本同時もOK）" : "動画 2 を選ぶ";
+  p.pickBtn.textContent = "動画を選択";
   p.tuneToggle.innerHTML = icon("settings", 16);
   p.playone.innerHTML = icon("play", 16);
 
@@ -376,6 +376,10 @@ function wireLoading(p) {
   p.fileInput.addEventListener("change", () => {
     const files = Array.from(p.fileInput.files);
     if (!files.length) return;
+    if (files.length > 2) {
+      alert("選択できる動画は2本までです");
+      return;
+    }
     loadFile(p, files[0]);
     if (files[1]) loadFile(panels[1 - p.i], files[1]);   // 2本選ばれたらもう片方のパネルにも割り当て
   });
