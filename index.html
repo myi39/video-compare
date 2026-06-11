@@ -131,7 +131,8 @@
   }
   .steprow { display: flex; gap: 5px; }
   .steprow button {
-    flex: 1; background: var(--panel); color: var(--text);
+    flex: 1; min-width: 0;   /* ラベル長に関わらず6ボタンを均等幅に */
+    background: var(--panel); color: var(--text);
     border: 1px solid var(--border); border-radius: 7px;
     padding: 9px 0; font-size: 0.7rem; font-variant-numeric: tabular-nums;
   }
@@ -203,6 +204,14 @@
   .gtune-pad { padding: 10px 12px 2px; border-bottom: 1px solid var(--border); }
   .grow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
   .glabel { font-size: 0.66rem; color: var(--text2); width: 24px; flex-shrink: 0; text-align: center; }
+  /* 設定パネル内のコントロールは微調整ボタンと同じ寸法ファミリーに揃える */
+  .gtune-pad .speedbtn, .gtune-pad .loopbtn {
+    padding: 8px 0; font-size: 0.72rem; border-radius: 7px;
+    background: var(--panel);
+  }
+  .gtune-pad .loopbtn {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
 </style>
 </head>
 <body>
@@ -655,7 +664,7 @@ function tick() {
 
 // ===== 起動 =====
 restartBtn.innerHTML = icon("rotateCcw", 16) + "<span>Aから</span>";
-loopBtn.innerHTML = icon("repeat", 16) + "<span>ループ</span>";
+loopBtn.innerHTML = icon("repeat", 14) + "<span>ループ</span>";
 gtuneToggle.innerHTML = icon("settings", 16);
 gtuneToggle.addEventListener("click", () => {
   const open = !gtuneEl.classList.contains("open");
