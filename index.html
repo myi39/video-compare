@@ -201,23 +201,19 @@
   }
   .gtune.open { grid-template-rows: 1fr; }
   .gtune-inner { overflow: hidden; min-height: 0; }
-  .gtune-pad { padding: 10px 12px 2px; border-bottom: 1px solid var(--border); }
+  /* 左右21px = パネル側（margin10+border1+pad10）と同じ実効幅になり、上のボタン列と整列する */
+  .gtune-pad { padding: 10px 21px 2px; border-bottom: 1px solid var(--border); }
   .grow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-  /* 設定パネル: 速度・ループ・位置調整を1行に収める */
+  /* 設定パネル: 1行目=速度・ループ、2行目=位置調整（パネル側の微調整ボタンと同寸） */
   .grow .steprow { flex: 1; }
-  .gtune-pad .speedbtn {
-    width: 56px; flex: none;
+  .gtune-pad .speedbtn, .gtune-pad .loopbtn {
+    flex: 1;
     padding: 8px 0; font-size: 0.7rem; border-radius: 7px;
     background: var(--panel);
   }
   .gtune-pad .loopbtn {
-    width: 38px; flex: none;
-    padding: 8px 0; border-radius: 7px;
-    background: var(--panel);
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
   }
-  .gsteprow { gap: 4px; }
-  .gsteprow button { font-size: 0.64rem; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -241,6 +237,8 @@
             <option value="0.25">0.25×</option>
           </select>
           <button type="button" class="loopbtn" id="loopBtn" disabled aria-label="ABループ"></button>
+        </div>
+        <div class="grow">
           <div class="steprow gsteprow">
             <button type="button" data-d="-1" disabled>−1</button><button type="button" data-d="-0.1" disabled>−0.1</button><button type="button" data-d="-0.01" disabled>−0.01</button><button type="button" data-d="0.01" disabled>+0.01</button><button type="button" data-d="0.1" disabled>+0.1</button><button type="button" data-d="1" disabled>+1</button>
           </div>
@@ -667,7 +665,7 @@ function tick() {
 
 // ===== 起動 =====
 restartBtn.innerHTML = icon("rotateCcw", 16) + "<span>Aから</span>";
-loopBtn.innerHTML = icon("repeat", 14);
+loopBtn.innerHTML = icon("repeat", 14) + "<span>ループ</span>";
 gtuneToggle.innerHTML = icon("settings", 16);
 gtuneToggle.addEventListener("click", () => {
   const open = !gtuneEl.classList.contains("open");
