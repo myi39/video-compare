@@ -33,8 +33,9 @@
   header h1 { font-size: 0.9rem; margin: 0; font-weight: 600; }
   .helpbtn {
     background: transparent; border: none; color: var(--text2);
-    width: 32px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
+    height: 28px; padding: 0 2px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 0.7rem;
   }
 
   /* ヘルプモーダル */
@@ -186,9 +187,6 @@
   .abrow .bset { color: var(--red); }
   .abrow .abval { font-size: 0.68rem; color: var(--text2); font-variant-numeric: tabular-nums; margin-left: auto; }
 
-  .hint {
-    margin: 2px 16px; font-size: 0.68rem; color: var(--text2); line-height: 1.6;
-  }
 
   .globalfoot {
     position: fixed; left: 0; right: 0; bottom: 0;
@@ -291,7 +289,6 @@
 
   <main id="panels"></main>
 
-  <p class="hint" id="hint">1. 動画を選ぶ → 2. 同じ場面で「A に設定」 → 3. 「Aから」で同時再生</p>
 
   <div class="globalfoot">
     <div class="gtune" id="gtune">
@@ -373,7 +370,6 @@ const restartBtn = document.getElementById("restartBtn");
 const playBothBtn = document.getElementById("playBothBtn");
 const speedSel = document.getElementById("speedSel");
 const loopBtn = document.getElementById("loopBtn");
-const hintEl = document.getElementById("hint");
 const gtuneEl = document.getElementById("gtune");
 const gtuneToggle = document.getElementById("gtuneToggle");
 const gtimeEl = document.getElementById("gtime");
@@ -529,9 +525,6 @@ function updateControls() {
   loopBtn.disabled = state.segLen == null;
   loopBtn.classList.toggle("on", state.loop);
   speedSel.value = String(state.speed);
-  hintEl.textContent = bothReady
-    ? "「A に設定」(歯車内) → 「Aから」で同時再生、再生ボタンは途中再開。速度・ループ・位置調整は右下の設定から"
-    : "動画を2本選ぶと同時再生できます";
 }
 
 // ===== シーク操作 =====
@@ -776,7 +769,7 @@ gtuneToggle.innerHTML = icon("settings", 16);
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
 const helpClose = document.getElementById("helpClose");
-helpBtn.innerHTML = icon("helpCircle", 18);
+helpBtn.innerHTML = "<span>使い方</span>" + icon("helpCircle", 18);
 helpClose.innerHTML = icon("x", 18);
 helpBtn.addEventListener("click", () => { helpModal.hidden = false; });
 helpClose.addEventListener("click", () => { helpModal.hidden = true; });
