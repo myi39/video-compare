@@ -198,7 +198,7 @@
         <span class="badge"></span>
         <video playsinline muted preload="metadata" hidden></video>
         <button type="button" class="pick-btn"></button>
-        <input type="file" accept="video/*" hidden>
+        <input type="file" accept="video/*" multiple hidden>
         <p class="err" hidden>この動画形式は再生できません</p>
       </div>
       <div class="ctrlrow">
@@ -291,7 +291,7 @@ function createPanel(i) {
     dragging: false,  // シークバーをドラッグ中か
   };
   p.badge.textContent = `動画 ${i + 1}`;
-  p.pickBtn.textContent = `動画 ${i + 1} を選ぶ`;
+  p.pickBtn.textContent = i === 0 ? "動画 1 を選ぶ（2本同時もOK）" : "動画 2 を選ぶ";
   p.tuneToggle.innerHTML = icon("settings", 16);
   p.playone.innerHTML = icon("play", 16);
 
@@ -320,16 +320,10 @@ function wireLoading(p) {
   p.repick.addEventListener("click", () => { p.fileInput.value = ""; p.fileInput.click(); });
 
   p.fileInput.addEventListener("change", () => {
-    const file = p.fileInput.files[0];
-    if (!file) return;
-    if (p.url) URL.revokeObjectURL(p.url);
-    p.url = URL.createObjectURL(file);
-    p.ready = false;
-    p.err.hidden = true;
-    p.video.src = p.url;
-    p.video.hidden = false;
-    p.pickBtn.hidden = true;
-    updateControls();
+    const files = Array.from(p.fileInput.files);
+    if (!files.length) return;
+    loadFile(p, files[0]);
+    if (files[1]) loadFile(panels[1 - p.i], files[1]);   // 2本選ばれたらもう片方のパネルにも割り当て
   });
 
   p.video.addEventListener("loadedmetadata", () => {
@@ -348,6 +342,17 @@ function wireLoading(p) {
     p.pickBtn.hidden = false;
     updateControls();
   });
+}
+
+function loadFile(p, file) {
+  if (p.url) URL.revokeObjectURL(p.url);
+  p.url = URL.createObjectURL(file);
+  p.ready = false;
+  p.err.hidden = true;
+  p.video.src = p.url;
+  p.video.hidden = false;
+  p.pickBtn.hidden = true;
+  updateControls();
 }
 
 function resetSegment() {
