@@ -118,6 +118,13 @@
   .tune-toggle.open { color: var(--accent); }
 
   .tune {
+    display: grid;
+    grid-template-rows: 0fr;   /* アコーディオン: 0fr→1fr をアニメーション */
+    transition: grid-template-rows 0.25s ease;
+  }
+  .tune.open { grid-template-rows: 1fr; }
+  .tune-inner { overflow: hidden; min-height: 0; }
+  .tune-pad {
     border-top: 1px solid var(--border);
     background: var(--panel2);
     padding: 10px 10px 11px;
@@ -204,7 +211,8 @@
         <span class="time"><b>0.00</b>/0.00</span>
         <button type="button" class="tune-toggle" aria-label="微調整・A/B設定"></button>
       </div>
-      <div class="tune" hidden>
+      <div class="tune">
+        <div class="tune-inner"><div class="tune-pad">
         <div class="steprow">
           <button type="button" data-d="-1" disabled>−1</button><button type="button" data-d="-0.1" disabled>−0.1</button><button type="button" data-d="-0.01" disabled>−0.01</button>
           <button type="button" data-d="0.01" disabled>+0.01</button><button type="button" data-d="0.1" disabled>+0.1</button><button type="button" data-d="1" disabled>+1</button>
@@ -215,6 +223,7 @@
           <button type="button" class="repick">選び直す</button>
           <span class="abval"></span>
         </div>
+        </div></div>
       </div>
     </section>
   </template>
@@ -299,8 +308,8 @@ function createPanel(i) {
 
 function wireTuneToggle(p) {
   p.tuneToggle.addEventListener("click", () => {
-    const open = p.tune.hidden;
-    p.tune.hidden = !open;
+    const open = !p.tune.classList.contains("open");
+    p.tune.classList.toggle("open", open);
     p.tuneToggle.classList.toggle("open", open);
   });
 }
