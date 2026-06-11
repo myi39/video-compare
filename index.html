@@ -25,7 +25,7 @@
     padding-bottom: calc(78px + env(safe-area-inset-bottom));
     font-size: 15px;
   }
-  button { font-family: inherit; }
+  button { font-family: inherit; touch-action: manipulation; }  /* 連打時のダブルタップズームを抑止 */
   header {
     padding: 10px 16px 4px;
     display: flex; align-items: baseline; justify-content: space-between;
@@ -83,6 +83,7 @@
   .seek {
     -webkit-appearance: none; appearance: none;
     width: 100%; background: transparent; margin: 0; height: 20px;
+    touch-action: manipulation;
   }
   .seek::-webkit-slider-runnable-track {
     height: 4px; background: #26272e; border-radius: 2px;
