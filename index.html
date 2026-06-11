@@ -149,6 +149,13 @@
     display: flex; align-items: center; justify-content: center;
   }
   .tune-toggle.open { color: var(--accent); }
+  .mutebtn {
+    background: transparent; border: none; color: var(--text);
+    width: 30px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mutebtn.muted { color: var(--text2); }
+  .mutebtn:disabled { opacity: 0.45; }
 
   .tune {
     display: grid;
@@ -310,7 +317,7 @@
     <section class="panel">
       <div class="video-area">
         <span class="badge"></span>
-        <video playsinline muted preload="metadata" hidden></video>
+        <video playsinline preload="metadata" hidden></video>
         <button type="button" class="pick-btn"></button>
         <input type="file" accept="video/*" multiple hidden>
         <p class="err" hidden>この動画形式は再生できません</p>
@@ -323,6 +330,7 @@
           <input type="range" class="seek" min="0" max="0" step="0.01" value="0" disabled>
         </div>
         <span class="time"><b>0.00</b>/0.00</span>
+        <button type="button" class="mutebtn" disabled aria-label="ミュート切替"></button>
         <button type="button" class="tune-toggle" aria-label="微調整・A/B設定"></button>
       </div>
       <div class="tune">
@@ -375,6 +383,8 @@ const ICONS = {
   rotateCcw: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   helpCircle: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  volume2: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+  volumeX: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
 };
@@ -398,6 +408,7 @@ function createPanel(i) {
     amark: root.querySelector(".amark"),
     bmark: root.querySelector(".bmark"),
     timeEl: root.querySelector(".time"),
+    muteBtn: root.querySelector(".mutebtn"),
     tuneToggle: root.querySelector(".tune-toggle"),
     tune: root.querySelector(".tune"),
     abval: root.querySelector(".abval"),
@@ -419,6 +430,7 @@ function createPanel(i) {
   wireSeek(p);
   wirePlayOne(p);
   wireAB(p);
+  wireMute(p);
   // ここに後続タスクの wire 呼び出しを追加していく
 
   document.getElementById("panels").appendChild(node);
@@ -496,6 +508,7 @@ function updateControls() {
     q.aset.disabled = !q.ready;
     q.bset.disabled = !q.ready;
     for (const btn of q.root.querySelectorAll(".steprow button")) btn.disabled = !q.ready;
+    q.muteBtn.disabled = !q.ready;
     q.abval.textContent = q.ready
       ? `A ${fmt(q.a)}` + (state.segLen != null ? ` ・ B ${fmt(q.a + state.segLen)}` : "")
       : "";
@@ -533,10 +546,35 @@ function stepSeek(p, d) {
   p.video.currentTime = clamp(p.video.currentTime + d, 0, p.video.duration);
 }
 
+// ===== 音声 =====
+// 基本は両方音あり。スピーカーボタンで動画ごとにミュート切替（全体ミュートはなし）
+function wireMute(p) {
+  p.muteBtn.addEventListener("click", () => {
+    p.video.muted = !p.video.muted;
+    syncMuteButtons();
+  });
+}
+
+function syncMuteButtons() {
+  for (const q of panels) {
+    q.muteBtn.innerHTML = icon(q.video.muted ? "volumeX" : "volume2", 15);
+    q.muteBtn.classList.toggle("muted", q.video.muted);
+  }
+}
+
 // ===== 単独再生 =====
-// play()はpause()との競合でAbortErrorを投げることがある（素早い連打等）ため、それだけ握りつぶす
+// play()はpause()との競合でAbortErrorを投げることがある（素早い連打等）ため、それだけ握りつぶす。
+// 音付き再生がOSにブロックされた場合（NotAllowedError）はその動画をミュートして再生を継続する
 function safePlay(v) {
-  v.play().catch((e) => { if (e.name !== "AbortError") throw e; });
+  v.play().catch((e) => {
+    if (e.name === "NotAllowedError") {
+      v.muted = true;
+      syncMuteButtons();
+      v.play().catch(() => {});
+    } else if (e.name !== "AbortError") {
+      throw e;
+    }
+  });
 }
 
 function wirePlayOne(p) {
@@ -740,6 +778,7 @@ for (const btn of gstepRow.querySelectorAll("button")) {
   btn.addEventListener("click", () => panels.forEach((q) => stepSeek(q, parseFloat(btn.dataset.d))));
 }
 panels.push(createPanel(0), createPanel(1));
+syncMuteButtons();
 updateControls();
 requestAnimationFrame(tick);
 </script>
