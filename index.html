@@ -188,12 +188,11 @@
   .gtunebtn.open { color: var(--accent); border-color: var(--accent); }
   .gtime {
     flex: 1;
-    display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
-    gap: 1px; padding-right: 2px;
-    font-variant-numeric: tabular-nums; font-size: 0.66rem; color: var(--text2);
-    line-height: 1.2;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 2px;
+    font-variant-numeric: tabular-nums; font-size: 0.85rem;
+    color: var(--text); font-weight: 500;
   }
-  .gtime b { color: var(--text); font-weight: 500; }
   .gtune {
     display: grid;
     grid-template-rows: 0fr;   /* 設定アコーディオン: バーの上に展開 */
@@ -203,7 +202,7 @@
   .gtune-inner { overflow: hidden; min-height: 0; }
   .gtune-pad { padding: 10px 12px 2px; border-bottom: 1px solid var(--border); }
   .grow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-  .glabel { font-size: 0.66rem; color: var(--text2); width: 14px; flex-shrink: 0; text-align: center; }
+  .glabel { font-size: 0.66rem; color: var(--text2); width: 24px; flex-shrink: 0; text-align: center; }
 </style>
 </head>
 <body>
@@ -229,14 +228,8 @@
           <button type="button" class="loopbtn" id="loopBtn" disabled aria-label="ABループ"></button>
         </div>
         <div class="grow">
-          <span class="glabel">1</span>
-          <div class="steprow gsteprow" data-panel="0">
-            <button type="button" data-d="-1" disabled>−1</button><button type="button" data-d="-0.1" disabled>−0.1</button><button type="button" data-d="-0.01" disabled>−0.01</button><button type="button" data-d="0.01" disabled>+0.01</button><button type="button" data-d="0.1" disabled>+0.1</button><button type="button" data-d="1" disabled>+1</button>
-          </div>
-        </div>
-        <div class="grow">
-          <span class="glabel">2</span>
-          <div class="steprow gsteprow" data-panel="1">
+          <span class="glabel">位置</span>
+          <div class="steprow gsteprow">
             <button type="button" data-d="-1" disabled>−1</button><button type="button" data-d="-0.1" disabled>−0.1</button><button type="button" data-d="-0.01" disabled>−0.01</button><button type="button" data-d="0.01" disabled>+0.01</button><button type="button" data-d="0.1" disabled>+0.1</button><button type="button" data-d="1" disabled>+1</button>
           </div>
         </div>
@@ -245,10 +238,7 @@
     <div class="globalbar">
       <button type="button" class="restartbtn" id="restartBtn" disabled aria-label="Aから同時再生"></button>
       <button type="button" class="playboth" id="playBothBtn" disabled aria-label="再生／一時停止"></button>
-      <div class="gtime" aria-label="Aからの経過タイム">
-        <span>1 <b id="gtime0">--</b></span>
-        <span>2 <b id="gtime1">--</b></span>
-      </div>
+      <div class="gtime" id="gtime" aria-label="Aからの経過タイム">--</div>
       <button type="button" class="gtunebtn" id="gtuneToggle" aria-label="設定（速度・ループ・位置調整）"></button>
     </div>
   </div>
@@ -308,8 +298,8 @@ const loopBtn = document.getElementById("loopBtn");
 const hintEl = document.getElementById("hint");
 const gtuneEl = document.getElementById("gtune");
 const gtuneToggle = document.getElementById("gtuneToggle");
-const gtimeEls = [document.getElementById("gtime0"), document.getElementById("gtime1")];
-const gstepRows = Array.from(document.querySelectorAll(".gsteprow"));
+const gtimeEl = document.getElementById("gtime");
+const gstepRow = document.querySelector(".gsteprow");
 
 // ===== ユーティリティ =====
 const fmt = (t) => Math.max(0, t).toFixed(2);
@@ -437,15 +427,12 @@ function updateControls() {
     q.aset.disabled = !q.ready;
     q.bset.disabled = !q.ready;
     for (const btn of q.root.querySelectorAll(".steprow button")) btn.disabled = !q.ready;
-    if (!q.ready) gtimeEls[q.i].textContent = "--";
     q.abval.textContent = q.ready
       ? `A ${fmt(q.a)}` + (state.segLen != null ? ` ・ B ${fmt(q.a + state.segLen)}` : "")
       : "";
   }
-  for (const rowEl of gstepRows) {
-    const q = panels[+rowEl.dataset.panel];
-    for (const btn of rowEl.querySelectorAll("button")) btn.disabled = !(q && q.ready);
-  }
+  for (const btn of gstepRow.querySelectorAll("button")) btn.disabled = !bothReady;
+  if (!panels.length || !panels[0].ready) gtimeEl.textContent = "--";
   restartBtn.disabled = !bothReady;
   playBothBtn.disabled = !bothReady;
   playBothBtn.innerHTML = icon(state.playingBoth ? "pause" : "play");
@@ -643,8 +630,10 @@ function updatePanelUI(p) {
     p.playone.dataset.icon = glyph;
     p.playone.innerHTML = icon(glyph, 16);
   }
-  const rel = v.currentTime - p.a;   // Aからの経過タイム
-  gtimeEls[p.i].textContent = (rel < 0 ? "−" : "") + Math.abs(rel).toFixed(2);
+  if (p.i === 0) {   // Aからの経過タイム（A合わせ済みなら両動画で同値なので動画1を代表表示）
+    const rel = v.currentTime - p.a;
+    gtimeEl.textContent = (rel < 0 ? "−" : "") + Math.abs(rel).toFixed(2);
+  }
 }
 
 function tick() {
@@ -662,11 +651,9 @@ gtuneToggle.addEventListener("click", () => {
   gtuneEl.classList.toggle("open", open);
   gtuneToggle.classList.toggle("open", open);
 });
-for (const rowEl of gstepRows) {
-  const idx = +rowEl.dataset.panel;
-  for (const btn of rowEl.querySelectorAll("button")) {
-    btn.addEventListener("click", () => stepSeek(panels[idx], parseFloat(btn.dataset.d)));
-  }
+for (const btn of gstepRow.querySelectorAll("button")) {
+  // 下部設定の位置調整は両動画を一括で動かす（片方だけはパネル側の歯車で）
+  btn.addEventListener("click", () => panels.forEach((q) => stepSeek(q, parseFloat(btn.dataset.d))));
 }
 panels.push(createPanel(0), createPanel(1));
 updateControls();
